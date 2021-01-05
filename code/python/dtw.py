@@ -14,7 +14,8 @@ options:
 import numpy as np
 import matplotlib.pyplot as plt
 
-def dtw(ts1=[],ts2=[],plot=False,test=False):
+
+def dtw(ts1=[], ts2=[], plot=False, test=False):
     """
     :type ts1: float - timeseries1
     :type ts2: float - timeseries2
