@@ -1,0 +1,3 @@
+link1 = r"C:\Users\20804370\Desktop\202012081708-ancfthrveijdbckh\xtcdata\Logs_Collector\Folder_20180223\Log.main_sys_2018-02-23__00-01-46.log"
+link2 = r"C:\Users\20804370\Desktop\202012081708-ancfthrveijdbckh\xtcdata\Logs_Collector\Folder_20180223\Log.main_sys_2018-02-23__08-11-42.log"
+link_sk = r"C:\Users\20804370\Desktop\202012211553-ancfthrveijdbckh\xtcdata\Logs_Collector\Folder_20201221\Log.main_sys_2020-12-21__10-49-32.log"
