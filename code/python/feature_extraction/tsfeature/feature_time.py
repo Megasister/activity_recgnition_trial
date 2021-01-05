@@ -48,9 +48,9 @@ class Feature_time(object):
         feature_all.append(self.time_mean())
         feature_all.append(self.time_var())
         feature_all.append(self.time_std())
-        feature_all.append(self.time_mode())
+        # feature_all.append(self.time_mode())
         feature_all.append(self.time_max())
         feature_all.append(self.time_min())
-        feature_all.append(self.time_over_zero())
-        feature_all.append(self.time_range())
+        # feature_all.append(self.time_over_zero())
+        # feature_all.append(self.time_range())
         return feature_all
