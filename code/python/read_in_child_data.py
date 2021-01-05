@@ -8,7 +8,7 @@ link1 = r'C:\Users\20804370\Desktop\activity-rec-feature-extr\activityrecognitio
 link2 = r'C:\Users\20804370\Desktop\activity-rec-feature-extr\activityrecognition\code\python\child_data\motion_data_2020-12-26__11-14-14.csv'
 link3 = r'C:\Users\20804370\Desktop\activity-rec-feature-extr\activityrecognition\code\python\child_data\motion_data_2020-12-26__14-35-58.csv'
 
-lines = pd.read_csv(link1)
+lines = pd.read_csv(link3)
 # print(lines)
 
 lines.columns = ['ord', 'time', 'ax', 'ay', 'az', 'wx', 'wy', 'wz', 'tile']
@@ -18,7 +18,7 @@ container_A1, container_G1 = [], []
 a_axis = ['ax', 'ay', 'az']
 g_axis = ['wx', 'wy', 'wz']
 for axis in a_axis:
-    container_A1.append(pd.Series(lines[axis], name = axis))
+    container_A1.append(pd.Series(lines[axis], name=axis))
 for axis in g_axis:
     container_G1.append(pd.Series(lines[axis], name=axis))
 
@@ -83,7 +83,7 @@ def get_coor(container_A1, container_G1, reg=None):
 
 # 根据时间窗口取得19个时域频域特征
 def get_aw_feature(walk_start_stamp, walk_end_stamp, container_A1, container_G1):
-    xa, ya, za, xw, yw, zw = get_coor(container_A1, container_G1)
+    xa, ya, za, xw, yw, zw = get_coor(container_A1, container_G1, reg='norm')
     xa, ya, za = xa[walk_start_stamp:walk_end_stamp], ya[walk_start_stamp:walk_end_stamp], za[walk_start_stamp:walk_end_stamp]
     xw, yw, zw = xw[walk_start_stamp:walk_end_stamp], yw[walk_start_stamp:walk_end_stamp], zw[walk_start_stamp:walk_end_stamp]
 
@@ -101,9 +101,9 @@ def get_aw_feature(walk_start_stamp, walk_end_stamp, container_A1, container_G1)
 
 def process():
     stamp = {}
-    s1, e1, s2, e2 = 56750, 65740, 119700, 123500
-    stamp['rope_skipping'] = [s2, e2]
-    stamp['sit_up1'] = [s1, e1]
+    # s1, e1, s2, e2 = 56750, 65740, 119700, 123500
+    # stamp['rope_skipping'] = [s2, e2]
+    # stamp['sit_up1'] = [s1, e1]
 
     # s1, e1, s2, e2, s3, e3, s4, e4 = 17580, 18740, 38220, 40610, 41370, 42150, 42650, 43130
     # s5, e5 = 112100, 114300
@@ -113,9 +113,9 @@ def process():
     # stamp['rope_skipping4'] = [s4, e4]
     # stamp['sit_up1'] = [s5, e5]
 
-    # s1, e1, s2, e2 = 70750, 72960, 111800, 116500
-    # stamp['rope_skipping'] = [s2, e2]
-    # stamp['sit_up1'] = [s1, e1]
+    s1, e1, s2, e2 = 70750, 72960, 111800, 116500
+    stamp['rope_skipping'] = [s2, e2]
+    stamp['sit_up1'] = [s1, e1]
 
     # 调试绘图
     # sos = signal.butter(3, 1, 'lp', fs=52, output='sos')
@@ -133,7 +133,7 @@ def process():
     # plt.show()
 
     # window_time = [0.5,1,3,5,8,10]  # s time of a window frame
-    window_time = [5]
+    window_time = [10]
     print('window time is:', window_time)
     overlap_rate = 0.2
     react_time = np.multiply(overlap_rate, window_time)  # s time for algrm to get enough data (for window analysis)
@@ -164,8 +164,8 @@ def process():
     print('feature num is:', len(next(iter(ftlist[0].values()))[0]))
     print('total dim is:', len(next(iter(ftlist[0].values()))))
     # save the feature and tags in pickel file
-    pd.DataFrame(ftlist).to_pickle(r'.\multiclass_new_tag\feature_child1_w5.pickle')
-    pd.DataFrame(taglist).to_pickle(r'.\multiclass_new_tag\tag_child1_w5.pickle')
+    pd.DataFrame(ftlist).to_pickle(r'.\multiclass_new_tag\feature_child3_w10_norm.pickle')
+    pd.DataFrame(taglist).to_pickle(r'.\multiclass_new_tag\tag_child3_w10_norm.pickle')
     print('preprocess over')
 
 
