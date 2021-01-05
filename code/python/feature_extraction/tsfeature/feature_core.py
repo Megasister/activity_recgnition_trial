@@ -13,7 +13,7 @@ from .feature_fft import Feature_fft
 def get_feature(arr):
     '''
     Get features of an array
-    :param arr: input 1D array
+    :param arr: child_data 1D array
     :return: feature list
     '''
     feature_list = list()
