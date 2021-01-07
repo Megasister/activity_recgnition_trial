@@ -7,24 +7,27 @@ import get_feature
 
 
 # window_time = [0.5,1,3,5,8,10]  # s time of a window frame
-window_time = [10]
+window_time = [5, 10]
 print('window time is:', window_time)
 overlap_rate = 0.2
 react_time = np.multiply(overlap_rate, window_time)  # s time for algrm to get enough data (for window analysis)
 print('react time is:', react_time)
 frequency = 52  # Hz designated frequency of sampling
 window_size = np.rint(np.multiply(window_time, frequency)).astype(int)  # number of samples in a window frame
+print(window_size)
 overlap_tolerance = np.rint(np.multiply(react_time, frequency)).astype(
     int)  # minimum number of samples for overlap the act would be considered on
 extend_coefficient = 1.5
 head_tail_extend = np.multiply(window_size, extend_coefficient).astype(
     int)  # number of samples used to over samling before and after the series to acquire more generalized data
 # assert (window_time > react_time)  # window frame is always longer than the reaction period
+window_overlap_ratio = 0.5
 
 
 # label the slidding window, return tag
-def label_target_activity(stamp, window_size, overlap_tolerance, head_tail_extend):
+def label_target_activity(stamp, window_size, overlap_tolerance, head_tail_extend, window_overlap_ratio):
     # initialize overall start and end stamp with head_tail_extend
+    # slide through all milages across different activity
     start, end, taglist = [], [], []
     for extend in head_tail_extend:
         for i, (_, act) in enumerate(stamp.items()):
@@ -32,20 +35,26 @@ def label_target_activity(stamp, window_size, overlap_tolerance, head_tail_exten
                 start.append(0 if act[0] - extend < 0 else act[0] - extend)
             if i == len(stamp)-1:
                 end.append(act[1] + extend)
+    print(start)
+    print(end)
+
     # tag corresponding activity for sliding window
     # that has an overlap with activity larger than overlap_tolerance = frequency * react_time
     # and other position 'others'
     for j in range(len(start)):
         tags = {}
-        for i in range(start[j], end[j], window_size[j]//2):
+        for i in range(start[j], end[j], int(window_size[j] * window_overlap_ratio)):
             tags[i], s, e = 'others', i, i + window_size[j]
             for name, act in stamp.items():
                 if (e - overlap_tolerance[j] < act[0]) or (s + overlap_tolerance[j] > act[1]):
                     continue
                 else:
-                    # tags[i] = 'rope_skipping'
-                    tags[i] = name
+                    if name.startswith('r'):
+                        tags[i] = 'rope_skipping'
+                    else:
+                        tags[i] = name
         taglist.append(tags)
+    # print(len(taglist))
     return taglist
 
 
@@ -54,8 +63,8 @@ def load_init_data():
     print('write over')
 
     # # 取得四元数
-    delta_angle = quadranion.get_quadranion(container_G1)
-    print(delta_angle)
+    # delta_angle = quadranion.get_quadranion(container_G1)
+    # print(delta_angle)
 
     stamp = {}
     # # for link_sk
@@ -74,8 +83,6 @@ def load_init_data():
     stamp['jog'] = [s3, e3]
     stamp['rope_skipping'] = [s4, e4]
     stamp['walking'] = [s5, e5]
-
-    print(container_A1)
 
     # # for link2
     # s1, e1, s2, e2, s3, e3, s4, e4 = 37900, 40150, 42950, 45050, 52400, 58450, 65040, 66350
@@ -100,7 +107,7 @@ def load_init_data():
     # plt.show()
 
     # tag dict
-    taglist = label_target_activity(stamp, window_size, overlap_tolerance, head_tail_extend)
+    taglist = label_target_activity(stamp, window_size, overlap_tolerance, head_tail_extend, window_overlap_ratio)
     # feature dict
     ftlist = []
     for i in range(len(taglist)):
