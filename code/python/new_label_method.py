@@ -28,8 +28,10 @@ import quadranion
 import get_feature
 import load_data
 
-n_class = ['jog', 'others', 'rope_skipping', 'sit_up1', 'sit_up2', 'walking']
+# n_class = ['jog', 'others', 'rope_skipping', 'sit_up1', 'sit_up2', 'walking']
+n_class = ['jog', 'others', 'rope_skipping', 'sit_up1', 'walking']
 # n_class = ['others', 'rope_skipping', 'sit_up1']
+# n_class = ['jog', 'others', 'walking']
 
 
 # 获得合成矢量
@@ -39,11 +41,11 @@ def sumvector(*args):
 
 def get_train_test_data(ftlist, taglist, i, n_class, test_size, random_state, shuffle_state):
     try:
-        df_ft = shuffle(pd.DataFrame(ftlist[i]).T, random_state=shuffle_state).T
-        df_tags = shuffle(pd.DataFrame(taglist[i], index=[0]).T, random_state=shuffle_state)
-    except:
         df_ft = shuffle(pd.DataFrame(ftlist).loc[i].dropna(how='all'), random_state=shuffle_state)
         df_tags = shuffle(pd.DataFrame(taglist).loc[i].dropna(how='all'), random_state=shuffle_state)
+    except:
+        df_ft = shuffle(pd.DataFrame(ftlist[i]).T, random_state=shuffle_state).T
+        df_tags = shuffle(pd.DataFrame(taglist[i], index=[0]).T, random_state=shuffle_state)
 
     if len(n_class) == 2:
         df_tags = convert_multiclass_binary(df_tags, n_class, i)
@@ -77,13 +79,23 @@ def convert_multiclass_binary(df_tags, n_class, i):
 
 
 def process_data():
-    # take data and process
-    ft1 = pd.read_pickle(r'multiclass_new_tag\feature_child1_w5_norm.pickle')
-    tag1 = pd.read_pickle(r'multiclass_new_tag\tag_child1_w5_norm.pickle')
-    # ft1 = pd.read_pickle(r'multiclass_new_tag\feature1_w10.pickle')
-    # tag1 = pd.read_pickle(r'multiclass_new_tag\tag1_w10.pickle')
+    # # take data and process
+    ft2 = pd.read_pickle(r'multiclass_new_tag\feature_child2_w10_test.pickle')
+    tag2 = pd.read_pickle(r'multiclass_new_tag\tag_child2_w10_test.pickle')
+    ft1 = pd.read_pickle(r'multiclass_new_tag\feature_child1_w10_test.pickle')
+    tag1 = pd.read_pickle(r'multiclass_new_tag\tag_child1_w10_test.pickle')
+    # ft3 = pd.read_pickle(r'multiclass_new_tag\feature_child4_w10_test.pickle')
+    # tag3 = pd.read_pickle(r'multiclass_new_tag\tag_child4_w10_test.pickle')
+    # ft4 = pd.read_pickle(r'multiclass_new_tag\feature_child4_w10_test.pickle')
+    # tag4 = pd.read_pickle(r'multiclass_new_tag\tag_child4_w10_test.pickle')
     # ftlist = [ftlist]
     # taglist = [taglist]
+
+    # ftlist = ft1
+    # taglist = tag1
+
+    # print('ft1',ftlist.iloc[0].iloc[0])
+    # print('ft1',ft1.iloc[0].iloc[0])
 
     # for mono dataset only, do not combine dataset
     # feature_eng.feature_corr(ft1, tag1, n_class, cross='feature', corr='spearman')
@@ -92,16 +104,16 @@ def process_data():
     # get correlation heatmap of features vs acts and features vs features
     # ft1 = pd.read_pickle(r'multiclass_new_tag\feature_sk_w5.pickle')
     # # tags1 = pd.read_pickle(r'multiclass_new_tag\tag_sk_w5.pickle')
-    ft2 = pd.read_pickle(r'multiclass_new_tag\feature_child2_w5_norm.pickle')
-    tag2 = pd.read_pickle(r'multiclass_new_tag\tag_child2_w5_norm.pickle')
-    ft3 = pd.read_pickle(r'multiclass_new_tag\feature_child3_w5_norm.pickle')
-    tag3 = pd.read_pickle(r'multiclass_new_tag\tag_child3_w5_norm.pickle')
-    ft4 = pd.read_pickle(r'multiclass_new_tag\feature1_w5.pickle')
-    tag4 = pd.read_pickle(r'multiclass_new_tag\tag1_w5.pickle')
+    # ft2 = pd.read_pickle(r'multiclass_new_tag\feature_child2_w10_norm.pickle')
+    # tag2 = pd.read_pickle(r'multiclass_new_tag\tag_child2_w10_norm.pickle')
+    # ft3 = pd.read_pickle(r'multiclass_new_tag\feature_child3_w10_norm.pickle')
+    # tag3 = pd.read_pickle(r'multiclass_new_tag\tag_child3_w10_norm.pickle')
+    # ft4 = pd.read_pickle(r'multiclass_new_tag\feature1_w5.pickle')
+    # tag4 = pd.read_pickle(r'multiclass_new_tag\tag1_w5.pickle')
     # ft5 = pd.read_pickle(r'multiclass_new_tag\feature2_w5.pickle')
     # tag5 = pd.read_pickle(r'multiclass_new_tag\tag2_w5.pickle')
-    ftlist = pd.concat([ft1, ft2, ft3, ft4], axis=1, sort=False)
-    taglist = pd.concat([tag1, tag2, tag3, tag4], axis=1, sort=False)
+    ftlist = pd.concat([ft1], axis=1, sort=False)
+    taglist = pd.concat([tag1], axis=1, sort=False)
 
     # ORDER MATTERS
     window_sizes = [0.5,1,3,5,8,10]
@@ -137,6 +149,6 @@ def process_data():
 
 
 if __name__ == '__main__':
-    # load_data.load_init_data()
-    process_data()
+    load_data.load_init_data()
+    # process_data()
 
