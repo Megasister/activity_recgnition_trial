@@ -32,7 +32,7 @@ def get_aw_feature(walk_start_stamp, walk_end_stamp, container_A1, container_G1)
     xa, ya, za = xa[walk_start_stamp:walk_end_stamp], ya[walk_start_stamp:walk_end_stamp], za[walk_start_stamp:walk_end_stamp]
     xw, yw, zw = xw[walk_start_stamp:walk_end_stamp], yw[walk_start_stamp:walk_end_stamp], zw[walk_start_stamp:walk_end_stamp]
 
-    # 六个加速度的统计特征 （窗口为500，步长为500）
+    # 六个加速度的统计特征
     feature_xa = feature_core.sequence_feature(xa, 0, 0)
     feature_ya = feature_core.sequence_feature(ya, 0, 0)
     feature_za = feature_core.sequence_feature(za, 0, 0)
