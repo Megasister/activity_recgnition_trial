@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import sklearn.tree._tree
 import parameter
 import scipy.io
 import seaborn as sns
@@ -19,6 +20,7 @@ from sklearn.naive_bayes import MultinomialNB, GaussianNB, BernoulliNB
 from sklearn.preprocessing import LabelEncoder as le, OneHotEncoder as onehot
 from sklearn.preprocessing import label_binarize
 from sklearn.ensemble import RandomForestClassifier
+import sklearn.tree as tree
 from scipy.stats import pearsonr, spearmanr, kendalltau
 from scipy import signal
 import txt_preprocess
@@ -215,7 +217,12 @@ def process_data():
         # clf = OneVsRestClassifier(GaussianNB())
         # clf = GaussianNB()
         # clf = BernoulliNB()
+        np.random.seed(1234)
         clf = RandomForestClassifier()
+        # [0.97 0.9  0.94 0.97 0.96 0.94 0.93 0.97 0.9  0.96]
+        # [0.96 0.89 0.94 0.99 0.93 0.94 0.91 0.97 0.9  0.97]
+        # [0.97 0.9  0.94 0.99 0.94 0.94 0.91 0.96 0.9  0.99]
+        # [0.97 0.9  0.94 0.99 0.94 0.94 0.91 0.96 0.9  0.99]
         para['clf_name'] = clf.__class__.__name__
         # parameters = {'kernel': ('linear', 'rbf'), 'C': [1, 10]}
         # clf = svm.SVC()
@@ -225,6 +232,15 @@ def process_data():
         clf.fit(X_train, Y_train)
         Y_predict = clf.predict(X_test)
         Y_prob = clf.predict_proba(X_test)
+
+        clf_len = len(clf.estimators_)
+        print("len is", clf_len)
+
+        # for i, each_tree in enumerate(clf.estimators_[0:5]):
+        #     tree.plot_tree(each_tree)
+        #     plt.show()
+        #     tree.export_graphviz(each_tree, r"tree{}.txt".format(i))
+
 
         # Y_test = label_binarize(Y_test, classes=n_class)
         # Y_predict = label_binarize(Y_predict, classes=n_class)
