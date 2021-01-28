@@ -25,13 +25,12 @@ def unscaled(xa, ya, za, xw, yw, zw, reg=None):
 
 
 # 根据时间窗口取得19个时域频域特征
-def get_aw_feature(walk_start_stamp, walk_end_stamp, container_A1, container_G1):
+def get_aw_feature(walk_start_stamp, walk_end_stamp, container_A1, container_G1, norm):
     xa, ya, za = np.array(container_A1)[:, 1], np.array(container_A1)[:, 2], np.array(container_A1)[:, 3]
     xw, yw, zw = np.array(container_G1)[:, 1], np.array(container_G1)[:, 2], np.array(container_G1)[:, 3]
     xa, ya, za = xa[walk_start_stamp:walk_end_stamp], ya[walk_start_stamp:walk_end_stamp], za[walk_start_stamp:walk_end_stamp]
     xw, yw, zw = xw[walk_start_stamp:walk_end_stamp], yw[walk_start_stamp:walk_end_stamp], zw[walk_start_stamp:walk_end_stamp]
-
-    xa, ya, za, xw, yw, zw = unscaled(xa, ya, za, xw, yw, zw, reg='norm')
+    xa, ya, za, xw, yw, zw = unscaled(xa, ya, za, xw, yw, zw, reg=norm)
 
     # 六个加速度的统计特征
     feature_xa = feature_core.sequence_feature(xa, 0, 0)
