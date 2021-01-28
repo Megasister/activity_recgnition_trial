@@ -7,11 +7,23 @@ from sklearn.preprocessing import label_binarize
 
 
 # Print confusion matrix
-def plot_cf_mat(clf, X_test, Y_test):
+def plot_cf_mat(clf, X_test, Y_test, para):
     np.set_printoptions(precision=2)
     # Plot non-normalized confusion matrix
-    titles_options = [("Confusion matrix, without normalization", None),
-                      ("Normalized confusion matrix", 'true')]
+    titles_options = [("Confusion matrix for {} by {}, test_ratio={:.3} \n "
+                       "window size={}, with {} preprocessing and {} feature_norm".format(para['content'],
+                                                                                          para['clf_name'],
+                                                                                          para['test_ratio'],
+                                                                                          para['window_size'],
+                                                                                          para['data_norm'],
+                                                                                          para['feature_norm']), None),
+                      ("Normalized confusion matrix for {} by {}, test_ratio={:.3} \n"
+                       "window size={}, with {} preprocessing and {} feature_norm".format(para['content'],
+                                                                                          para['clf_name'],
+                                                                                          para['test_ratio'],
+                                                                                          para['window_size'],
+                                                                                          para['data_norm'],
+                                                                                          para['feature_norm']), 'true')]
     # confusion matrix
     for title, normalize in titles_options:
         disp = plot_confusion_matrix(clf, X_test, Y_test,
@@ -24,20 +36,20 @@ def plot_cf_mat(clf, X_test, Y_test):
 
 
 # plot roc curve in one vs rest style
-def plot_roc(Y_test, Y_predict, Y_prob, n_class, window_size):
+def plot_roc(Y_test, Y_predict, Y_prob, para):
     # Compute ROC curve and ROC area for each class
     fpr = dict()
     tpr = dict()
     roc_auc = dict()
-    Y_test = label_binarize(Y_test, classes=n_class)
-    Y_predict = label_binarize(Y_predict, classes=n_class)
+    Y_test = label_binarize(Y_test, classes=para['n_class'])
+    Y_predict = label_binarize(Y_predict, classes=para['n_class'])
 
     # print(Y_test)
     # print(Y_prob[:, 0])
     # print(roc_auc_score(Y_test, Y_prob, average='micro'))
     plt.figure()
-    for j in range(len(n_class) if len(n_class) > 2 else len(n_class)-1):
-        if len(n_class) > 2:
+    for j in range(len(para['n_class']) if len(para['n_class']) > 2 else len(para['n_class'])-1):
+        if len(para['n_class']) > 2:
             y_true = Y_test[:, j]
             y_prob = Y_prob[:, j]
         else:
@@ -48,13 +60,13 @@ def plot_roc(Y_test, Y_predict, Y_prob, n_class, window_size):
         print(roc_auc_score(y_true, y_prob))
 
         # plot the roc curve for the model
-        plt.plot(fpr, tpr, linestyle='--', label='classes of {}: auc = {}'.format(n_class[j], roc_auc))
+        plt.plot(fpr, tpr, linestyle='--', label='classes of {}: auc = {}'.format(para['n_class'][j], roc_auc))
         # axis labels
         plt.xlabel('False Positive Rate')
         plt.ylabel('True Positive Rate')
         # show the legend
         plt.legend()
-    plt.title('ROC curve for window_size of {}'.format(window_size))
+    # plt.title('ROC curve for window_size of {} \n with {} data preprocessing'.format(window_size, norm))
 
     f, t, _ = roc_curve(Y_test.ravel(), Y_prob.ravel())
     roc_auc = auc(f, t)
@@ -64,5 +76,11 @@ def plot_roc(Y_test, Y_predict, Y_prob, n_class, window_size):
     plt.ylabel('True Positive Rate')
     # show the legend
     plt.legend()
-    plt.title('ROC curve for window_size of {}'.format(window_size))
+    plt.title('ROC curve by {} for {}, test_ratio={:.3} \n'
+              'window_size={}, with {} preprocessing and {} feature_norm'.format(para['clf_name'],
+                                                                                 para['content'],
+                                                                                 para['test_ratio'],
+                                                                                 para['window_size'],
+                                                                                 para['data_norm'],
+                                                                                 para['feature_norm']))
     plt.show()
