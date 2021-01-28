@@ -82,6 +82,7 @@ class Feature_fft(object):
     #     var = np.sum([np.power((x - shape_mean), 2) * self.freq_spectrum[x]
     #                   for x in range(len(self.freq_spectrum))]) / self._freq_sum_
     #     return np.sqrt(var)
+
     def fft_shape_std(self):
         shape_mean = self.fft_shape_mean()
         var = np.sum([0 if self._freq_sum_ == 0 else np.power((x - shape_mean), 2) * self.freq_spectrum[x]
