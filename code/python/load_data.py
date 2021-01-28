@@ -4,24 +4,32 @@ import parameter
 import txt_preprocess
 import quadranion
 import get_feature
+from scipy import signal
+import matplotlib.pyplot as plt
 
 
-# window_time = [0.5,1,3,5,8,10]  # s time of a window frame
-window_time = [5, 10]
-print('window time is:', window_time)
-overlap_rate = 0.2
-react_time = np.multiply(overlap_rate, window_time)  # s time for algrm to get enough data (for window analysis)
-print('react time is:', react_time)
-frequency = 52  # Hz designated frequency of sampling
-window_size = np.rint(np.multiply(window_time, frequency)).astype(int)  # number of samples in a window frame
-print(window_size)
-overlap_tolerance = np.rint(np.multiply(react_time, frequency)).astype(
-    int)  # minimum number of samples for overlap the act would be considered on
-extend_coefficient = 1.5
-head_tail_extend = np.multiply(window_size, extend_coefficient).astype(
-    int)  # number of samples used to over samling before and after the series to acquire more generalized data
-# assert (window_time > react_time)  # window frame is always longer than the reaction period
-window_overlap_ratio = 0.5
+def normalization(data):
+    _range = np.max(data) - np.min(data)
+    return (data - np.min(data)) / _range
+
+
+def standardization(data):
+    mu = np.mean(data, axis=0)
+    sigma = np.std(data, axis=0)
+    return (data - mu) / sigma
+
+
+# get data on each axis
+def get_coor(container_A1, container_G1, reg=None):
+    xa, ya, za = np.array(container_A1)[:, 0], np.array(container_A1)[:, 1], np.array(container_A1)[:, 2]
+    xw, yw, zw = np.array(container_G1)[:, 0], np.array(container_G1)[:, 1], np.array(container_G1)[:, 2]
+    if reg == 'stdr':
+        xa, ya, za = standardization(xa), standardization(ya), standardization(za)
+        xw, yw, zw = standardization(xw), standardization(yw), standardization(zw)
+    elif reg == 'norm':
+        xa, ya, za = normalization(xa), normalization(ya), normalization(za)
+        xw, yw, zw = normalization(xw), normalization(yw), normalization(zw)
+    return xa, ya, za, xw, yw, zw
 
 
 # label the slidding window, return tag
@@ -49,6 +57,8 @@ def label_target_activity(stamp, window_size, overlap_tolerance, head_tail_exten
                 if (e - overlap_tolerance[j] < act[0]) or (s + overlap_tolerance[j] > act[1]):
                     continue
                 else:
+                    if name.startswith('s'):
+                        tags[i] = 'sit_up1'
                     if name.startswith('r'):
                         tags[i] = 'rope_skipping'
                     else:
@@ -59,8 +69,6 @@ def label_target_activity(stamp, window_size, overlap_tolerance, head_tail_exten
 
 
 def load_init_data():
-    container_A1, container_G1 = txt_preprocess.preprocess(parameter.link1)
-    print('write over')
 
     # # 取得四元数
     # delta_angle = quadranion.get_quadranion(container_G1)
@@ -91,6 +99,14 @@ def load_init_data():
     # stamp['jog'] = [s3, e3]
     # stamp['rope_skipping'] = [s4, e4]
 
+    person_link = parameter.link1 # link1 includes person 1 AND person 2
+    person_id = 1
+    norm = 'None'
+    # window_time = [0.5, 1, 3, 5, 8, 10]  # s time of a window frame
+    window_time = [4.92]
+    container_A1, container_G1 = txt_preprocess.preprocess(person_link)
+    print('write over')
+
     # 调试绘图
     # sos = signal.butter(3, 1, 'lp', fs=52, output='sos')
     # accdata = signal.sosfilt(sos, [g[-1] for g in container_G1])
@@ -106,8 +122,40 @@ def load_init_data():
     # plt.plot([d[2] for d in delta_angle], label='psi')
     # plt.show()
 
+    print('window time is:', window_time)
+    overlap_rate = 0.2
+    react_time = np.multiply(overlap_rate, window_time)  # s time for algrm to get enough data (for window analysis)
+    print('react time is:', react_time)
+    frequency = 52  # Hz designated frequency of sampling
+    window_size = np.rint(np.multiply(window_time, frequency)).astype(int)  # number of samples in a window frame
+    print(window_size)
+    overlap_tolerance = np.rint(np.multiply(react_time, frequency)).astype(
+        int)  # minimum number of samples for overlap the act would be considered on
+    extend_coefficient = 1.5
+    head_tail_extend = np.multiply(window_size, extend_coefficient).astype(
+        int)  # number of samples used to over samling before and after the series to acquire more generalized data
+    # assert (window_time > react_time)  # window frame is always longer than the reaction period
+    window_overlap_ratio = 0.5
+
     # tag dict
     taglist = label_target_activity(stamp, window_size, overlap_tolerance, head_tail_extend, window_overlap_ratio)
+
+    # # observe the tag
+    # c = 0
+    # for tag, value in taglist[0].items():
+    #     alpha = 150
+    #     if c > alpha:
+    #         plt.figure()
+    #         s, e = int(tag), int(tag) + window_size[0]
+    #         _, _, _, _, _, wz = get_coor(container_A1, container_G1)
+    #         plt.plot(wz[s:e])
+    #         plt.title(value)
+    #     c += 1
+    #     if c == alpha + 30:
+    #         break
+    # plt.show()
+    # i
+
     # feature dict
     ftlist = []
     for i in range(len(taglist)):
@@ -115,16 +163,16 @@ def load_init_data():
         print('This is window time of {}s'.format(window_time[i]))
         for k, _ in tags.items():
             print(k)
-            ft[k] = get_feature.get_aw_feature(k, k+size, container_A1, container_G1)
+            ft[k] = get_feature.get_aw_feature(k, k+size, container_A1, container_G1, norm)
         ftlist.append(ft)
 
     # print(ftlist)
     print('feature num is:', len(next(iter(ftlist[0].values()))[0]))
     print('total dim is:', len(next(iter(ftlist[0].values()))))
     # save the feature and tags in pickel file
-    # pd.DataFrame(ftlist).to_pickle(r'.\multiclass_new_tag\feature2_w5.pickle')
-    # pd.DataFrame(taglist).to_pickle(r'.\multiclass_new_tag\tag2_w5.pickle')
-    # print('preprocess over')
+    pd.DataFrame(ftlist).to_pickle(r'.\multiclass_new_tag\feature{}_w{}_{}.pickle'.format(person_id, window_time, norm))
+    pd.DataFrame(taglist).to_pickle(r'.\multiclass_new_tag\tag{}_w{}_{}.pickle'.format(person_id, window_time, norm))
+    print('preprocess over')
 
 
 if __name__ == '__main__':
