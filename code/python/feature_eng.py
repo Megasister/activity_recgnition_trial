@@ -5,7 +5,6 @@ from scipy.stats import pearsonr, spearmanr, kendalltau
 import dtw
 from matplotlib import pylab as plt
 
-
 # pearson：Pearson相关系数来衡量两个数据集合是否在一条线上面，即针对线性数据的相关系数计算，针对非线性数据便会有误差。
 # spearman：非线性的，非正太分析的数据的相关系数
 # kendall：用于反映分类变量相关性的指标，即针对无序序列的相关系数，非正太分布的数据
@@ -25,8 +24,8 @@ def corrolate(list1, list2, corr='dtw'):
     return res
 
 
-def feature_corr(ftlist, taglist, n_class, cross='feature', corr='dtw'):
-    ftlist = ftlist.T[0].apply(pd.Series).T
+def feature_corr(Ord, ftlist, taglist, n_class, cross='feature', corr='dtw'):
+    ftlist = ftlist.T[Ord].apply(pd.Series).T
     ftrs = {'xa':[], 'ya':[], 'za':[], 'xw':[], 'yw':[], 'zw':[]}
     for i, k in enumerate(ftrs.keys()):
         ftrs[k] = ftlist.iloc[i]
@@ -34,8 +33,9 @@ def feature_corr(ftlist, taglist, n_class, cross='feature', corr='dtw'):
     # only do one axis (zw) for sake of analysis across activity
     tag_class, feature = {a:[] for a in n_class}, {a:[] for a in n_class}
 
-    for i in taglist.keys():
-        tag_class[taglist[i][0]] += [i]
+    for k, v in taglist.items():
+        tag_class[v[Ord]] += [k]
+
     target_df = ftrs['zw']
     feature_no = len(target_df.iloc[0])
 
@@ -91,20 +91,23 @@ def feature_corr(ftlist, taglist, n_class, cross='feature', corr='dtw'):
 
 
 if __name__ == '__main__':
+    ft1 = pd.read_pickle(r'multiclass_new_tag\feature_child1_w[0.5, 1, 3, 5, 8, 10]_stdr.pickle')
+    tag1 = pd.read_pickle(r'multiclass_new_tag\tag_child1_w[0.5, 1, 3, 5, 8, 10]_stdr.pickle')
 
-    ft1 = pd.read_pickle(r'multiclass_new_tag\feature_child1_w5_norm.pickle')
-    tag1 = pd.read_pickle(r'multiclass_new_tag\tag_child1_w5_norm.pickle')
-    n_class = ['others', 'rope_skipping', 'sit_up1']
+    n_class = ['jog', 'others', 'rope_skipping', 'sit_up1', 'walking']
+    window_sizes = [0.5, 1, 3, 5, 8, 10]
 
-    # ft1 = pd.read_pickle(r'multiclass_new_tag\feature1_w10.pickle')
-    # tag1 = pd.read_pickle(r'multiclass_new_tag\tag1_w10.pickle')
-    # n_class = ['jog', 'others', 'rope_skipping', 'sit_up1', 'sit_up2', 'walking']
+    for i in range(len(window_sizes)):
+        df_ft = pd.DataFrame(ft1).loc[i].dropna(how='all')
+        df_tag = pd.DataFrame(tag1).loc[i].dropna(how='all')
+        df_tag = pd.DataFrame(df_tag).T
+        df_ft = pd.DataFrame(df_ft).T
 
-    # for mono dataset only, do not combine dataset
-    feature_corr(ft1, tag1, n_class, cross='acts', corr='spearman')
-    plt.figure()
-    feature_corr(ft1, tag1, n_class, cross='acts', corr='kendall')
-    plt.figure()
-    feature_corr(ft1, tag1, n_class, cross='acts', corr='dtw')
-    plt.show()
+        # for mono dataset only, do not combine dataset
+        feature_corr(i, df_ft, df_tag, n_class, cross='acts', corr='spearman')
+        plt.figure()
+        feature_corr(i, df_ft, df_tag, n_class, cross='feature', corr='spearman')
+        # plt.figure()
+        # feature_corr(ft1, tag1, n_class, cross='acts', corr='dtw')
+        plt.show()
 
