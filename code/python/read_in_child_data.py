@@ -5,6 +5,7 @@ import re
 import scipy.io
 from feature_extraction.tsfeature import feature_core, feature_fft, feature_time
 import parameter
+from copy import deepcopy
 
 
 def get_container(link):
@@ -22,7 +23,6 @@ def get_container(link):
     for axis in g_axis:
         container_G1.append(pd.Series(lines[axis], name=axis))
 
-
     container_A1 = np.array(container_A1)
     container_A1 = container_A1.T
     container_G1 = np.array(container_G1)
@@ -36,7 +36,7 @@ def label_target_activity(stamp, window_size, overlap_tolerance, head_tail_exten
     # initialize overall start and end stamp with head_tail_extend
     start, end, taglist = [], [], []
     for extend in head_tail_extend:
-        s_bucket, e_bucket = [],[]
+        s_bucket, e_bucket = [], []
         for _, (_, act) in enumerate(stamp.items()):
             for i, tup in enumerate(act):
                 if i == 0:
@@ -103,12 +103,15 @@ def get_coor(container_A1, container_G1, reg=None):
 
 
 # 根据时间窗口取得19个时域频域特征
-def get_aw_feature(walk_start_stamp, walk_end_stamp, container_A1, container_G1):
-    xa, ya, za, xw, yw, zw = get_coor(container_A1, container_G1, reg='norm')
+def get_aw_feature(walk_start_stamp, walk_end_stamp, container_A1, container_G1, local_norm=None, flatten=False):
+    xa, ya, za, xw, yw, zw = get_coor(container_A1, container_G1, local_norm)
     xa, ya, za = xa[walk_start_stamp:walk_end_stamp], ya[walk_start_stamp:walk_end_stamp], za[walk_start_stamp:walk_end_stamp]
     xw, yw, zw = xw[walk_start_stamp:walk_end_stamp], yw[walk_start_stamp:walk_end_stamp], zw[walk_start_stamp:walk_end_stamp]
 
     # 六个加速度的统计特征 （窗口为500，步长为500）
+    for i, (pxa, pya, pza, pxw, pyw, pzw) in enumerate(zip(xa, ya, za, xw, yw, zw)):
+        print(pxa, pya, pza, pxw, pyw, pzw)
+
     feature_xa = feature_core.sequence_feature(xa, 0, 0)
     feature_ya = feature_core.sequence_feature(ya, 0, 0)
     feature_za = feature_core.sequence_feature(za, 0, 0)
@@ -116,19 +119,68 @@ def get_aw_feature(walk_start_stamp, walk_end_stamp, container_A1, container_G1)
     feature_yw = feature_core.sequence_feature(yw, 0, 0)
     feature_zw = feature_core.sequence_feature(zw, 0, 0)
 
-    # return [feature_xa]
-    return [feature_xa, feature_ya, feature_za, feature_xw, feature_yw, feature_zw]
+    # print("feature:"),
+    # for i in [feature_xa.tolist() + feature_ya.tolist() + feature_za.tolist()
+    #         + feature_xw.tolist() + feature_yw.tolist() + feature_zw.tolist()][0]:
+    #     print(i)
+    # print("*************************************")
+
+    if not flatten:
+        return [feature_xa, feature_ya, feature_za, feature_xw, feature_yw, feature_zw]
+    return [feature_xa.tolist() + feature_ya.tolist() + feature_za.tolist()
+            + feature_xw.tolist() + feature_yw.tolist() + feature_zw.tolist()]
+
+
+def norm_container(container_A1, container_G1, s, e, reg):
+    if s <= 0: s = 1
+    container_A, container_G = deepcopy(container_A1), deepcopy(container_G1)
+    xa, ya, za = container_A1[s-1:e, 0], container_A1[s-1:e, 1], container_A1[s-1:e, 2]
+    xw, yw, zw = container_G1[s-1:e, 0], container_G1[s-1:e, 1], container_G1[s-1:e, 2]
+    if reg=='stdr':
+        xa, ya, za = standardization(xa), standardization(ya), standardization(za)
+        xw, yw, zw = standardization(xw), standardization(yw), standardization(zw)
+    elif reg=='norm':
+        xa, ya, za = normalization(xa), normalization(ya), normalization(za)
+        xw, yw, zw = normalization(xw), normalization(yw), normalization(zw)
+    if reg:
+        container_A[s-1:e, 0], container_A[s-1:e, 1], container_A[s-1:e, 2] = xa, ya, za
+        container_G[s-1:e, 0], container_G[s-1:e, 1], container_G[s-1:e, 2] = xw, yw, zw
+    # plt.plot(container_A1[s-1:e, 0])
+    # plt.figure()
+    # plt.plot(container_A[s-1:e, 0])
+    # plt.show()
+    return container_A, container_G
+
+
+def get_norm_container(container_A1, container_G1, stamp, reg):
+    container_A, container_G = deepcopy(container_A1), deepcopy(container_G1)
+    for list_tuple in stamp.values():
+        print(list_tuple)
+        s, e = list_tuple[0][0], list_tuple[-1][-1]
+        print(s, e)
+        container_A, container_G = norm_container(container_A, container_G, s, e, reg)
+    return container_A, container_G
 
 
 def process():
-    container_A1, container_G1 = get_container(parameter.kid_link5)
-    stamp = {}
-    print(container_A1)
+    norm_slide_window = None
+    global_norm = 'None'
+    # window_time = [0.5, 1, 3, 5, 8, 10]  # s time of a window frame
+    window_time = [4.92]
+    kid_link = parameter.kid_link5
+    kid_no = 5
+    print(kid_no, norm_slide_window)
 
-    # kid_link5
+    stamp = {}
+
+    # # kid_link5
     s1, e1, s2, e2= 609, 37730, 52600, 78370
     stamp['walking'] = [(s1, e1)]
     stamp['jog'] = [(s2, e2)]
+
+    container_A1, container_G1 = get_container(kid_link)
+
+    # mu, var = get_stdr_para(container_A1, container_G1, start, end)
 
     # 调试绘图
     # sos = signal.butter(3, 1, 'lp', fs=52, output='sos')
@@ -144,9 +196,8 @@ def process():
     # plt.plot([d[1] for d in delta_angle], label='fai')
     # plt.plot([d[2] for d in delta_angle], label='psi')
     # plt.show()
-    i
-    # window_time = [0.5,1,3,5,8,10]  # s time of a window frame
-    window_time = [10]
+
+    # window_time = [8]
     print('window time is:', window_time)
     overlap_rate = 0.2
     react_time = np.multiply(overlap_rate, window_time)  # s time for algrm to get enough data (for window analysis)
@@ -163,24 +214,51 @@ def process():
     # tag dict
     taglist = label_target_activity(stamp, window_size, overlap_tolerance, head_tail_extend)
 
+    # observe the tag
+    # for i in range(len(window_size)):
+    #     c = 0
+    #     for tag, value in taglist[i].items():
+    #         alpha = 250
+    #         if c > alpha:
+    #             plt.figure()
+    #             s, e = int(tag), int(tag) + window_size[i]
+    #             _, _, _, _, _, wz = get_coor(container_A1, container_G1)
+    #             plt.plot(wz[s:e])
+    #             plt.title('{}, window size= {}'.format(value, window_size[i]))
+    #         c += 1
+    #         if c == alpha + 5:
+    #             break
+    #     plt.show()
+    # i
+
     # feature dict
     ftlist = []
     for i in range(len(taglist)):
-        tags, size, ft = taglist[i], window_size[i], {}
+        tags, size, ft, extend = taglist[i], window_size[i], {}, head_tail_extend[i]
+        norm_container_A1, norm_container_G1 = get_norm_container(container_A1, container_G1, stamp,
+                                                                  global_norm)
         print('This is window time of {}s'.format(window_time[i]))
         for k, _ in tags.items():
             print(k)
-            ft[k] = get_aw_feature(k, k + size, container_A1, container_G1)
+            # print('window size ord', i)
+            ft[k] = get_aw_feature(k, k + size, norm_container_A1, norm_container_A1, flatten=False)
         ftlist.append(ft)
 
-    print(ftlist)
+    # print(ftlist)
     print('feature num is:', len(next(iter(ftlist[0].values()))[0]))
     print('total dim is:', len(next(iter(ftlist[0].values()))))
+
     # save the feature and tags in pickel file
-    # pd.DataFrame(ftlist).to_pickle(r'.\multiclass_new_tag\feature_child1_w10_test.pickle')
-    # pd.DataFrame(taglist).to_pickle(r'.\multiclass_new_tag\tag_child1_w10_test.pickle')
-    # print('preprocess over')
+    pd.DataFrame(ftlist).to_pickle(r'.\multiclass_new_tag\feature_child{}_w{}_{}.pickle'.format(kid_no, window_time, global_norm))
+    pd.DataFrame(taglist).to_pickle(r'.\multiclass_new_tag\tag_child{}_w{}_{}.pickle'.format(kid_no, window_time, global_norm))
+    print('preprocess over')
 
 
 if __name__ == '__main__':
     process()
+
+    # test between c and language
+    # fft_trans = np.abs(np.fft.fft(test))
+    # freq_spectrum = fft_trans[1:int(np.floor(len(test) * 1.0 / 2)) + 1]
+    # print(freq_spectrum)
+    # print(feature_core.sequence_feature(test, 0, 0))
