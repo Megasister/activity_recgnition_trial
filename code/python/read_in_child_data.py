@@ -108,9 +108,9 @@ def get_aw_feature(walk_start_stamp, walk_end_stamp, container_A1, container_G1,
     xa, ya, za = xa[walk_start_stamp:walk_end_stamp], ya[walk_start_stamp:walk_end_stamp], za[walk_start_stamp:walk_end_stamp]
     xw, yw, zw = xw[walk_start_stamp:walk_end_stamp], yw[walk_start_stamp:walk_end_stamp], zw[walk_start_stamp:walk_end_stamp]
 
-    # 六个加速度的统计特征 （窗口为500，步长为500）
-    for i, (pxa, pya, pza, pxw, pyw, pzw) in enumerate(zip(xa, ya, za, xw, yw, zw)):
-        print(pxa, pya, pza, pxw, pyw, pzw)
+    # # 六个加速度的统计特征 （窗口为500，步长为500）
+    # for i, (pxa, pya, pza, pxw, pyw, pzw) in enumerate(zip(xa, ya, za, xw, yw, zw)):
+    #     print(pxa, pya, pza, pxw, pyw, pzw)
 
     feature_xa = feature_core.sequence_feature(xa, 0, 0)
     feature_ya = feature_core.sequence_feature(ya, 0, 0)
@@ -214,7 +214,7 @@ def process():
     # tag dict
     taglist = label_target_activity(stamp, window_size, overlap_tolerance, head_tail_extend)
 
-    # observe the tag
+    # # observe the tag
     # for i in range(len(window_size)):
     #     c = 0
     #     for tag, value in taglist[i].items():
@@ -249,9 +249,9 @@ def process():
     print('total dim is:', len(next(iter(ftlist[0].values()))))
 
     # save the feature and tags in pickel file
-    pd.DataFrame(ftlist).to_pickle(r'.\multiclass_new_tag\feature_child{}_w{}_{}.pickle'.format(kid_no, window_time, global_norm))
-    pd.DataFrame(taglist).to_pickle(r'.\multiclass_new_tag\tag_child{}_w{}_{}.pickle'.format(kid_no, window_time, global_norm))
-    print('preprocess over')
+    # pd.DataFrame(ftlist).to_pickle(r'.\multiclass_new_tag\feature_child{}_w{}_{}.pickle'.format(kid_no, window_time, global_norm))
+    # pd.DataFrame(taglist).to_pickle(r'.\multiclass_new_tag\tag_child{}_w{}_{}.pickle'.format(kid_no, window_time, global_norm))
+    # print('preprocess over')
 
 
 if __name__ == '__main__':
