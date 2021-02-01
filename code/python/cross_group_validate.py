@@ -252,7 +252,7 @@ def process_data():
         Y_predict = clf.predict(X_test)
         Y_prob = clf.predict_proba(X_test)
 
-        with open('test_data_with_class.txt', 'a') as file:
+        with open('random_forest_parameter_and_structure/test_data_with_class.txt', 'a') as file:
             for i in [0, 50, 100, 245, 312, 345, 400]:
                 file.write(str(X_train[i]) + '\n')
                 file.write(Y_train[i] + '\n')
