@@ -1,12 +1,16 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from copy import deepcopy
+import io
 import sklearn.tree._tree
 import parameter
 import scipy.io
 import seaborn as sns
 import re
+import pydotplus
 import math
+import json
 from feature_extraction.tsfeature import feature_core, feature_fft, feature_time
 from sklearn import svm
 from sklearn.multiclass import OneVsRestClassifier, OneVsOneClassifier
@@ -124,6 +128,21 @@ def convert_multiclass_binary(df_tags, n_class, i):
     return df_tags
 
 
+def get_struct_init(list_ele):
+    string = ''
+    for i, ele in enumerate(list_ele):
+        if i != len(list_ele) - 1:
+            string += str(ele) + ', '
+            if isinstance(ele, int) or isinstance(ele, float):
+                pass
+            else:
+                string += '\n'
+        else:
+            string += str(ele)
+    string = '{' + string + '}'
+    return string
+
+
 def process_data():
     # # take data and process
     # window_sizes = [0.5, 1, 3, 5, 8, 10]
@@ -233,14 +252,54 @@ def process_data():
         Y_predict = clf.predict(X_test)
         Y_prob = clf.predict_proba(X_test)
 
+        with open('test_data_with_class.txt', 'a') as file:
+            for i in [0, 50, 100, 245, 312, 345, 400]:
+                file.write(str(X_train[i]) + '\n')
+                file.write(Y_train[i] + '\n')
+                file.write(str(X_test[i]) + '\n')
+                file.write(Y_test[i] + '\n')
+                file.write(Y_predict[i] + '\n')
+        file.close()
+
         clf_len = len(clf.estimators_)
         print("len is", clf_len)
 
-        # for i, each_tree in enumerate(clf.estimators_[0:5]):
-        #     tree.plot_tree(each_tree)
-        #     plt.show()
-        #     tree.export_graphviz(each_tree, r"tree{}.txt".format(i))
-
+        # output a struct initialization format for c implementation
+        # ind = -1
+        # forest_list = []
+        # for i, each_tree in enumerate(clf.estimators_):
+        #     tree_obj = each_tree.tree_
+        #
+        #     fig = plt.figure(figsize=(20, 20))
+        #     with open('treeone.dot', 'w') as f:
+        #         dot_data = tree.export_graphviz(each_tree, out_file='graph.txt')
+        #         # f.write(dot_data)
+        #
+        #     # tree.plot_tree(each_tree)
+        #     break
+        #
+        #     capacity = tree_obj.capacity
+        #     children_left = tree_obj.children_left.tolist()
+        #     children_right = tree_obj.children_right.tolist()
+        #     feature = tree_obj.feature.tolist()
+        #     threshold = tree_obj.threshold.tolist()
+        #     value = deepcopy(tree_obj.value)
+        #     values = [x[0].tolist().index(max(x[0].tolist())) for x in value]
+        #
+        #     if capacity > ind:
+        #         ind = capacity
+        #
+        #     struct_list = [children_left, children_right, feature, threshold, values]
+        #     struct_convert = []
+        #
+        #     for struct_ele in struct_list:
+        #         struct_convert.append(get_struct_init(struct_ele))
+        #     forest_list.append(get_struct_init([capacity] + struct_convert))
+        #
+        # final_file = get_struct_init(forest_list)
+        # with open('test_largest_node{}.txt'.format(ind), 'w') as fp:
+        #     fp.write(final_file)
+        # fp.close()
 
         # Y_test = label_binarize(Y_test, classes=n_class)
         # Y_predict = label_binarize(Y_predict, classes=n_class)
